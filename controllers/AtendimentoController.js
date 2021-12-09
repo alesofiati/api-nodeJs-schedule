@@ -1,7 +1,11 @@
+const Atedimento = require('../models/Atendimentos')
 module.exports = app => {
-    app.get('/atendimentos', (req, res) => res.send('Sou um get'))
+    app.get('/atendimentos', (req, res) => {
+        return Atedimento.all()
+    })
     app.post('/atendimentos', (req, res) => {
-        console.log(req.body)
-        res.send('Sou um post')
+        const attributes = req.body
+
+        return Atedimento.create(attributes)
     })
 }
