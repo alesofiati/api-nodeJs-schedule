@@ -1,41 +1,59 @@
 const conexao = require('./../database/conexao')
-const moment = require('moment')
 class Atendimentos{
 
-    create(attributes){
+    create(attributes, response){
         const sql =  `INSERT INTO atendimentos SET ?`
-        const data = moment(attributes.data, 'DD/MM/YYYY').format('YYYY-MM-DD HH:MM:SS')
-        conexao.query(sql, {...attributes, dt_criacao: new Date(), data}, (error, result) =>{
+
+        conexao.query(sql, {...attributes, dt_criacao: new Date()}, (error, result) =>{
             if(error){
-                console.log(error)
+                return response.status(400).json({message: error.sqlMessage})
             }else{
-                console.log(result)
+                const {insertId} = result
+                return this.findById(insertId, response)
             }
-            
         })
     }
 
-    update(){
-
+    update(params){
+        const {id, attributes, response} = params
+        const sql = 'UPDATE atendimentos SET ? WHERE id = ?'
+        conexao.query(sql, [attributes, id], (error, result) =>{
+            if(error){
+                return response.status(400).json({message: 'Não foi possivel atualizar o registro informado'})
+            }
+            return this.findById(id, response)
+        })
     }
 
-    all(){
+    all(response){
         const sql = `SELECT * FROM atendimentos ORDER BY data DESC`
         return conexao.query(sql, (error, result) => {
             if(error){
-                console.log(error)
+                return response.status(400).json({message: 'Não foi possivel processar a sua requisição'})
             }else{
-                console.log(result)
+                return response.status(200).json(result)
             }
         })
     }
 
-    findById(){
-
+    findById(id, response){
+        const sql = `SELECT * FROM atendimentos WHERE id = ${id}`
+        conexao.query(sql, (error, result) =>{
+            if(result.length){
+                return response.status(200).json(result[0])
+            }
+            return response.status(400).json({message: 'Agendamento não encontrado'})
+        })
     }
 
-    destroy(){
-
+    destroy(id, response){
+        const sql = `DELETE FROM atendimentos WHERE id = ?`
+        conexao.query(sql, id, (error, result) => {
+            if(result.affectedRows){
+                return response.status(200).json({ message: 'Agendamento removido com sucesso', id })
+            }
+            return response.status(400).json({ message: 'Não foi possivel remover o agendamento' })
+        })
     }
 
 
